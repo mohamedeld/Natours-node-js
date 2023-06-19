@@ -7,7 +7,6 @@ mongoose.connect(process.env.DATABASE,{
     useNewUrlParser:true,
     family:4
 }).then(()=> {
-
     app.listen(PORT, () => {
         console.log("listening on port " + PORT);
     });
