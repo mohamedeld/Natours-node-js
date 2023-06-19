@@ -28,6 +28,10 @@ const tourSchema = new mongoose.Schema({
     price:{
         type:Number,
         required:[true,'Tour must have a price']
+    },
+    summary:{
+        type:String,
+        required:[true,'Tour must have a summary']
     }
 });
 const Tour = mongoose.model('Tour',tourSchema);
