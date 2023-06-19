@@ -95,3 +95,54 @@ exports.deleteTour = async (request, response) => {
     });
   }
 };
+
+exports.tourStats = async (request,response)=>{
+  try{
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          _id: '$difficulty',
+          numTours: { $sum: 1 },
+          numRating: { $sum: '$ratingsQuantity' },
+          avgPrice: { $avg: '$price' },
+          avgRating: { $avg: '$ratingsAverage' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+    ]);
+    response.status(200).json({
+      status:"success",
+      data:{
+        stats
+      }
+    })
+  }catch(err){
+    response.status(404).json({
+      status:"fail",
+      message:err
+    })
+  }
+}
+
+exports.getMonthlyPlan = async (request,response)=>{
+  try {
+    const year = request.params.year * 1;
+    const plan = await Tour.aggregate([]);
+    response.status(200).json({
+      status: 'success',
+      data: {
+        plan,
+      },
+    });
+
+  } catch (err) {
+    response.status(404).json({
+      status: 'fail',
+      message: err,
+    });
+  }
+}
