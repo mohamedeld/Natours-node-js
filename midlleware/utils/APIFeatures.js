@@ -31,11 +31,26 @@ class APIFeatures{
         }
         return this;
     }
-    paginate(){
+    paginate(countDocuments){
         const page = this.queryString.page * 1 || 1;
         const limit = this.queryString.limit * 1 || 100;
         const skip = (page - 1) * limit;
+
+        let pagination = {};
+        let endPageIndex = page * limit;
+        pagination.currentPage =page;
+        pagination.limit = limit;
+
+        pagination.numberOfPages = Math.ceil(countDocuments/ limit);
+        if(endPageIndex < countDocuments){
+            pagination.next = page + 1;
+        }
+        if(skip > 1){
+            pagination.previous = page -1;
+        }
+        
         this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
+        this.paginationResult = pagination;
 
         return this;
     }
