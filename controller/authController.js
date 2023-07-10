@@ -3,7 +3,11 @@ const AppError = require("../midlleware/utils/appError");
 const catchAsync = require("../midlleware/utils/catchAsync");
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const sendEmail = require("../midlleware/utils/sendEmail");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+
+
 exports.signUp = catchAsync(async(request,response,next)=>{
     const user = await User.create(request.body);
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
@@ -83,3 +87,59 @@ exports.restrictTo = (...roles)=>{
         next();
     }
 }
+exports.forgotPassword = catchAsync(async(request,response,next)=>{
+    const user = await User.findOne({email:request.body.email});
+    if(!user){
+        return next(new AppError("invalid email",401))
+    }
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    const hashResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.passwordResetToken =hashResetToken;
+    user.passwordExpires= Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    const resetURL = `${request.protocol}://${request.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+    try{
+      await sendEmail({
+      email:user.email,
+      subject:'your password reset token (valid for 10 minutes)',
+      text:`Forgot your password? Submit a PATCH request with your new password and password confirm to : ${resetURL} \n if you did not please ignore this message`
+    })
+    response.status(200).json({
+      stauts:"success",
+      message:'please check your email'
+    })
+    }catch(err){
+      user.passwordResetToken=undefined;
+      user.passwordExpires= undefined; 
+      await user.save({validateBeforeSave:false});
+      return next(new AppError("an error through sending email try later",500));
+    }
+    
+})
+
+exports.resetPassword = catchAsync(async(request,response,next)=>{
+  const hashedToken = crypto.createHash('sha256').update(request.params.token).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordExpires: { $gt: Date.now() },
+  });
+  if(!user){
+    return next(new AppError("invalid token please try later",400));
+  }
+  user.password = request.body.newPassword;
+  user.confirmPassword = request.body.confirmPassword;
+  user.passwordResetToken = undefined;
+  user.passwordExpires = undefined;
+  await user.save();
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
+    expiresIn: process.env.EXPIRES_DATE,
+  });
+  response.status(200).json({
+    status:"success",
+    token
+    
+  })
+})

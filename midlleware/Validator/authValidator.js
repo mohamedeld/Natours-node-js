@@ -47,11 +47,9 @@ module.exports.loginValidator = [
         if (!user) {
           return Promise.reject(new Error('invalid email please sign up'));
         }
-      });
+      }); 
     }),
   body('password')
     .notEmpty()
     .withMessage('please enter your password')
-    .isStrongPassword()
-    .withMessage('please enter a strong password'),
 ];
