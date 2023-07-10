@@ -38,12 +38,31 @@ const userSchema = new mongoose.Schema({
   },
   passwordVerifiedCode:{
     type:Boolean
+  },
+  active:{
+    type:Boolean,
+    default:true,
+    select:false
   }
 });
+userSchema.pre("save",function(next){
+  if(!this.isModified('password')) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+userSchema.pre(/^find/,function(next){
+  this.find({active:{$ne:false}});
+  next();
+})
 userSchema.pre("save",async function(next){
     if(!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password,12);
     this.confirmPassword = undefined;
     next();
 });
+// userSchema.methods.checkPassword = async function(candidatePassword,userPassword){
+//   await bcrypt.compare(candidatePassword,userPassword);
+// }
+
 module.exports = mongoose.model('User', userSchema);

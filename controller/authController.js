@@ -7,19 +7,29 @@ const sendEmail = require("../midlleware/utils/sendEmail");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
+const createSendToken = (response, statusCode, user) => {
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
+    expiresIn: process.env.EXPIRES_DATE,
+  });
+  const cookieOptions ={
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN*24*60*60*1000),
+    httpOnly:true
+  };
+  if(process.env.NODE_ENV === 'production'){
+    cookieOptions.secure = true
+  }
+  response.cookie("token", token, cookieOptions);
+  user.password = undefined;
+  response.status(statusCode).json({
+    status: "success",
+    user,
+    token,
+  });
+};
 
 exports.signUp = catchAsync(async(request,response,next)=>{
     const user = await User.create(request.body);
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
-      expiresIn: process.env.EXPIRES_DATE,
-    });
-    response.status(201).json({
-      status: 'success',
-      data: {
-        user,
-        token
-      },
-    });
+    createSendToken(response,200,user);
 });
 
 
@@ -87,6 +97,10 @@ exports.restrictTo = (...roles)=>{
         next();
     }
 }
+
+
+
+
 exports.forgotPassword = catchAsync(async(request,response,next)=>{
     const user = await User.findOne({email:request.body.email});
     if(!user){
@@ -134,12 +148,63 @@ exports.resetPassword = catchAsync(async(request,response,next)=>{
   user.passwordResetToken = undefined;
   user.passwordExpires = undefined;
   await user.save();
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
-    expiresIn: process.env.EXPIRES_DATE,
-  });
+  createSendToken(response,200,user);
+});
+exports.getLoggedUserData = catchAsync(async(request,response,next)=>{
+  request.params.id = request.user.id;
+  next();
+})
+exports.updateLoggedUserPassword = catchAsync(async(request,response,next)=>{
+  const user = await User.findByIdAndUpdate(request.user.id,{
+    password:await bcrypt.hash(request.body.password,12),
+    passwordChangedAt:Date.now(),
+  },{new:true});
+  if(!user){
+    return next(new AppError("invalid user please login in",400))
+  }
+  createSendToken(response, 200, user);
+  // const user = await User.findById(request.user.id);
+  // if(!(await user.checkPassword(request.body.confirmPassword,user.password))){
+  //   return next(new AppError("your current password was wrong",401))
+  // }
+  // user.password = request.body.password;
+  // user.confirmPassword = request.body.confirmPassword;
+  // await user.save();
+
+  // response.status(200).json({
+  //   status:"success",
+  //   data:{
+  //     user
+  //   }
+  // })
+});
+
+exports.updateLoggedUserData = catchAsync(async(request,response,next)=>{
+  if(request.body.password || request.body.confirmPassword){
+    return next(new AppErrro("you cant change password or confirm password please use updateMyPassword/",400));
+  }
+  const user = await User.findByIdAndUpdate(request.user.id,{
+    name:request.body.name
+    
+  },{new:true});
   response.status(200).json({
     status:"success",
-    token
-    
+    data:{
+      user
+    }
   })
-})
+});
+
+exports.deActivateLoggedUser = catchAsync(async(request,response,next)=>{
+  const user = await User.findByIdAndUpdate(request.user.id,{
+    active:false
+  },{new:true});
+  if(!user){
+    return next(new AppError("invalid user email",400));
+  }
+  response.status(200).json({
+    status:"success",
+    message:"deleted",
+    data:null
+  })
+});
