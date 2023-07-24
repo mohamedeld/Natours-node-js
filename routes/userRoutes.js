@@ -1,8 +1,9 @@
 const express = require("express");
 const userController = require("../controller/userController");
+const authController =require("../controller/authController");
 
 const {
-  createUserValidator,
+  
   findUserValidator,
   userChangePasswordValidator,
   updateUserValidator,
@@ -13,13 +14,12 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(userController.getAllUsers)
-  .post(createUserValidator, checkValidator,userController.createUser);
+  .get(authController.protect,authController.restrictTo('admin'),userController.getAllUsers);
 router
   .route('/:id')
-  .get(findUserValidator, checkValidator, userController.getUser)
-  .patch(updateUserValidator, checkValidator, userController.updateUser)
-  .delete(deleteUserValidator, checkValidator,userController.deleteUser);
+  .get(authController.protect,authController.restrictTo('admin'),findUserValidator, checkValidator, userController.getUser)
+  .patch(authController.protect,authController.restrictTo('admin'),updateUserValidator, checkValidator, userController.updateUser)
+  .delete(authController.protect,authController.restrictTo('admin'),deleteUserValidator, checkValidator,userController.deleteUser);
 
 router
   .route('/changePassword/:id')

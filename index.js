@@ -11,6 +11,7 @@ const hpp = require("hpp");
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
+const reviewRouter = require('./routes/reviewRotues');
 const app = express();
 
 app.use(helmet());
@@ -44,6 +45,7 @@ app.use('/api',limiter);
 app.use("/api/v1/tours",tourRouter);
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/auth",authRouter);
+app.use('/api/v1/review',reviewRouter);
 
 app.all("*",(request,response,next)=>{
     next(new AppError(`Cant find ${request.originalUrl} on this server`,404));

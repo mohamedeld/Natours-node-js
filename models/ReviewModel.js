@@ -16,13 +16,19 @@ const reviewSchema = new mongoose.Schema({
     },
     tour:{
         type:mongoose.Schema.ObjectId,
-        ref:'Tour'
+        ref:'Tour',
+        required:[true,'Review must belong to a tour']
     },
     user:{
         type:mongoose.Schema.ObjectId,
-        ref:'User'
+        ref:'User',
+        required:[true,'Review must belong to a user']
     }
     
-});
+},{
+    toJSON:{virtuals:true},
+    toObject:{virtuals:true}
+},
+{timestamps:true});
 
 module.exports = mongoose.model('Review',reviewSchema);
