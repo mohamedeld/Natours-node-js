@@ -8,7 +8,7 @@ const tourSchema = new mongoose.Schema(
       unique: true,
     },
     slug: String,
-    durations: {
+    duration: {
       type: Number,
       required: [true, 'A tour must have a duration'],
     },
@@ -65,6 +65,29 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation:{
+      type:{
+        type:String,
+        default:'Point',
+        enum:[]
+      },
+      coordinates:[Number],
+      address:String,
+      description:String
+    },
+    locations:[
+      {
+        type:{
+          type:String,
+          default:'Point',
+          enum:['Point']
+        },
+        coordinates:[Number],
+        address:String,
+        description:String,
+        day:Number
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
