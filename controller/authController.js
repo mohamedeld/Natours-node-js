@@ -1,11 +1,11 @@
+const bcrypt = require("bcrypt");
 const {promisify} = require("util");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const AppError = require("../midlleware/utils/appError");
 const catchAsync = require("../midlleware/utils/catchAsync");
 const User = require("../models/userModel");
-const bcrypt = require("bcrypt");
 const sendEmail = require("../midlleware/utils/sendEmail");
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
 
 const createSendToken = (response, statusCode, user) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
@@ -29,7 +29,17 @@ const createSendToken = (response, statusCode, user) => {
 
 exports.signUp = catchAsync(async(request,response,next)=>{
     const user = await User.create(request.body);
-    createSendToken(response,200,user);
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN, {
+      expiresIn: process.env.EXPIRES_DATE,
+    });
+    response.status(201).json({
+      status: 200,
+      message: 'sign up successfully',
+      data: {
+        user,
+        token
+      },
+    });
 });
 
 
@@ -68,7 +78,6 @@ exports.protect = catchAsync(async(request,response,next)=>{
       token,
       process.env.JWT_SECRET_TOKEN
     ); 
-    
     const currentUser = await User.findById(decoded.id);
     if(!currentUser){
         return next(new AppError('user does not exist', 401));
@@ -77,7 +86,7 @@ exports.protect = catchAsync(async(request,response,next)=>{
         let convertDateToTimestamp = parseInt(
           currentUser.passwordChangedAt.getTime() / 1000,
           10
-        );
+        );  
         if(convertDateToTimestamp > decoded.iat){
             response.status(401).json({
               message: 'the user change his password please login again',
@@ -90,7 +99,6 @@ exports.protect = catchAsync(async(request,response,next)=>{
 
 exports.restrictTo = (...roles)=>{
     return (request,response,next)=>{
-        console.log(request.user.role);
         if(!roles.includes(request.user.role)){
             return next(new AppError("you don't have permission for this role",403))
         }

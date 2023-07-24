@@ -1,21 +1,29 @@
+
 const fs = require('fs');
 const mongoose = require('mongoose');
-const dotenv= require('dotenv');
+const dotEnv= require('dotenv');
+
 const Tour = require('../../models/tourModel');
 
-dotEnv.config({path:'./config.env'});
-const PORT = process.env.PORT || 8000;
-mongoose.connect(process.env.DATABASE,{
+dotEnv.config({path:`${__dirname}/config.env`});
+
+if (!process.env.DATABASE_URL) {
+    console.error('MongoDB connection string is not defined.');
+    process.exit(1);
+  }
+
+mongoose.connect(process.env.DATABASE_URL,{
     useNewUrlParser:true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true,
     family:4
 }).then(()=> {
     console.log("connection successful.")
 }).catch(err=> console.log("Error ",err));
-const server = app.listen(PORT, () => {
-  console.log('listening on port ' + PORT);
-});
 
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`,'utf-8'));
+
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`,`utf-8`));
 
 const importData = async ()=>{
     try{
@@ -37,7 +45,7 @@ const deleteData = async ()=>{
     process.exit();
 };
 
-if(process.argv[2] === '---import'){
+if(process.argv[2] === '--import'){
     importData();
 }else if(process.argv[2] === '--delete'){
     deleteData();

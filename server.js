@@ -8,8 +8,11 @@ const app = require("./index");
 const dotEnv = require("dotenv");
 dotEnv.config({path:'./config.env'});
 const PORT = process.env.PORT || 8000;
-mongoose.connect(process.env.DATABASE,{
+mongoose.connect(process.env.DATABASE_URL,{
     useNewUrlParser:true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true,
     family:4
 }).then(()=> {
     

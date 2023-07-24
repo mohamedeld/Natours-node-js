@@ -100,7 +100,9 @@ exports.deleteTour = catchAsync(async (request, response,next) => {
   }
   response.status(204).json({
     status: 'success',
+    message:"deleted successfully",
     data: null,
+
   });
 });
 

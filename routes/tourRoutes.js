@@ -10,7 +10,7 @@ router.route("/first-five").get(tourController.aliasTopTours,tourController.getT
 router
   .route('/')
   .get(authController.protect,checkValidator, tourController.getTours)
-  .post(tourController.createTour);
+  .post( authController.protect,authController.restrictTo('admin'),checkValidator,tourController.createTour);
 router.route('/tour-stats').get(checkValidator,tourController.getTourStat);
 router
   .route('/monthly-plan/:year')
@@ -32,8 +32,8 @@ router
     tourController.updateTour
   )
   .delete(
-    authController.restrictTo('admin', 'lead-guide'),
     authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
     checkValidator,
     tourController.deleteTour
   );
