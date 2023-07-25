@@ -109,6 +109,8 @@ tourSchema.virtual('reviews',{
   foreignField:'tour',
   localField:'_id'
 });
+tourSchema.index({price:1,ratingsAverage:-1});
+tourSchema.index({slug:1});
 
 tourSchema.pre("save",function(next){
   this.slug = slugify(this.name,{lower:true});

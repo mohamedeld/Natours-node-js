@@ -3,7 +3,7 @@ const userController = require("../controller/userController");
 const authController =require("../controller/authController");
 
 const {
-  
+  createUserValidator,
   findUserValidator,
   userChangePasswordValidator,
   updateUserValidator,
@@ -16,21 +16,24 @@ router.use(authController.protect);
 
 router.route('/me',userController.getMe,userController.getUser);
 router
-  .route('/')
-  .get(authController.restrictTo('admin'),userController.getAllUsers);
-router
-  .route('/:id')
-  .get(authController.restrictTo('admin'),findUserValidator, checkValidator, userController.getUser)
-  .patch(authController.restrictTo('admin'),updateUserValidator, checkValidator, userController.updateUser)
-  .delete(authController.restrictTo('admin'),deleteUserValidator, checkValidator,userController.deleteUser);
-
-router
   .route('/changePassword/:id')
   .put(
     userChangePasswordValidator,
     checkValidator,
     userController.userChangePassword
   );
+
+
+router.use(authController.restrictTo('admin'));
+router
+  .route('/')
+  .get(userController.getAllUsers).post(checkValidator,userController.createUser);
+router
+  .route('/:id')
+  .get(findUserValidator, checkValidator, userController.getUser)
+  .patch(updateUserValidator, checkValidator, userController.updateUser)
+  .delete(deleteUserValidator, checkValidator,userController.deleteUser);
+
 
 
 module.exports = router;

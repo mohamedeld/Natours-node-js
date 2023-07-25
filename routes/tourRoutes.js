@@ -8,12 +8,12 @@ const reviewRouter =require('./reviewRoutes');
 const router = express.Router();
 
 router.use('/:tourId/reviews',reviewRouter);
-
+router.use(authController.protect);
 router.route("/first-five").get(tourController.aliasTopTours,tourController.getTours);
 router
   .route('/')
-  .get(authController.protect,checkValidator, tourController.getTours)
-  .post( authController.protect,authController.restrictTo('admin'),checkValidator,tourController.createTour);
+  .get(checkValidator, tourController.getTours)
+  .post(authController.restrictTo('admin'),checkValidator,tourController.createTour);
 router.route('/tour-stats').get(checkValidator,tourController.getTourStat);
 router
   .route('/monthly-plan/:year')
@@ -22,7 +22,7 @@ router
 router
   .route('/:id')
   .get(
-    authController.protect,
+    
     authController.restrictTo('admin', 'lead-guide'),
     findTourValidator,
     checkValidator,
@@ -30,12 +30,12 @@ router
   )
   .patch(
     authController.restrictTo('admin', 'lead-guide'),
-    authController.protect,
+   
     checkValidator,
     tourController.updateTour
   )
   .delete(
-    authController.protect,
+
     authController.restrictTo('admin', 'lead-guide'),
     checkValidator,
     tourController.deleteTour
