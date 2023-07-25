@@ -104,6 +104,12 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual("durationOfWeeks").get(function () {
   return this.durations / 7;
 });
+tourSchema.virtual('reviews',{
+  ref:'Review',
+  foreignField:'tour',
+  localField:'_id'
+});
+
 tourSchema.pre("save",function(next){
   this.slug = slugify(this.name,{lower:true});
   next();
@@ -119,6 +125,9 @@ tourSchema.pre("save",function(next){
     next();
   });
 
+  
+
+
 tourSchema.pre(/^find/,function(next){
     this.populate({
       path:'guides',
@@ -126,5 +135,7 @@ tourSchema.pre(/^find/,function(next){
     })
   next();
 });
+
+
 
 module.exports  = mongoose.model('Tour',tourSchema);
