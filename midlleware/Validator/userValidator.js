@@ -1,6 +1,7 @@
+const bcrypt = require("bcrypt");
 const { query, param, body } = require('express-validator');
 const User = require("../../models/userModel");
-const bcrypt = require("bcrypt");
+
 module.exports.createUserValidator = [
     body("name").notEmpty().withMessage('please enter your name').isLength({min:6,max:25}).withMessage("please enter from 6 to 25 chars"),
     body("email").notEmpty().withMessage('please enter your email').isEmail().withMessage("please enter a valid email").custom((val,{req})=>{
@@ -14,7 +15,7 @@ module.exports.createUserValidator = [
 ]
 
 module.exports.findUserValidator = [
-  param('id')
+  param('id').optional()
     .notEmpty()
     .withMessage('please enter your id')
     .isMongoId()

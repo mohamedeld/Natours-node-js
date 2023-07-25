@@ -10,16 +10,19 @@ const {
   deleteUserValidator,
 } = require('../midlleware/Validator/userValidator');
 const checkValidator = require("../midlleware/Validator/checkValidtor");
-const router = express.Router();
 
+const router = express.Router();
+router.use(authController.protect);
+
+router.route('/me',userController.getMe,userController.getUser);
 router
   .route('/')
-  .get(authController.protect,authController.restrictTo('admin'),userController.getAllUsers);
+  .get(authController.restrictTo('admin'),userController.getAllUsers);
 router
   .route('/:id')
-  .get(authController.protect,authController.restrictTo('admin'),findUserValidator, checkValidator, userController.getUser)
-  .patch(authController.protect,authController.restrictTo('admin'),updateUserValidator, checkValidator, userController.updateUser)
-  .delete(authController.protect,authController.restrictTo('admin'),deleteUserValidator, checkValidator,userController.deleteUser);
+  .get(authController.restrictTo('admin'),findUserValidator, checkValidator, userController.getUser)
+  .patch(authController.restrictTo('admin'),updateUserValidator, checkValidator, userController.updateUser)
+  .delete(authController.restrictTo('admin'),deleteUserValidator, checkValidator,userController.deleteUser);
 
 router
   .route('/changePassword/:id')
@@ -28,5 +31,6 @@ router
     checkValidator,
     userController.userChangePassword
   );
+
 
 module.exports = router;

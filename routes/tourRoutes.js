@@ -1,10 +1,13 @@
 const express = require("express");
-const tourController = require("./../controller/tourController");
+const tourController = require("../controller/tourController");
 const {findTourValidator} = require("../midlleware/Validator/tourValidator");
 const checkValidator = require("../midlleware/Validator/checkValidtor");
 const authController = require("../controller/authController");
+const reviewRouter =require('./reviewRoutes');
+
 const router = express.Router();
 
+router.use('/:tourId/reviews',reviewRouter);
 
 router.route("/first-five").get(tourController.aliasTopTours,tourController.getTours);
 router
@@ -37,5 +40,7 @@ router
     checkValidator,
     tourController.deleteTour
   );
+
+
 
 module.exports = router;

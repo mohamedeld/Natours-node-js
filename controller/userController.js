@@ -1,38 +1,22 @@
+const bcrypt = require("bcrypt");
 const AppError = require("../midlleware/utils/appError");
 const catchAsync = require("../midlleware/utils/catchAsync");
 const User = require("../models/userModel");
-const bcrypt = require("bcrypt");
+const factory = require('./handlerFactory');
 
-exports.getAllUsers = catchAsync(async (request, response, next) => {
-  const users = await User.find();
-  response.status(200).json({
-    status: 'success',
-    data: {
-      users,
-    },
-  });
+
+exports.getAllUsers = factory.getAll(User);
+exports.getUser = factory.getOne(User);
+exports.createUser = factory.createOne(User);
+
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
+
+exports.getMe = catchAsync((request,response,next)=>{
+  request.params.id = request.user.id;
+  next();
 });
-exports.getUser = catchAsync(async (request, response,next) => {
-  const user = await User.findById(request.params.id);
-  if (!user) {
-    return next(new AppError('cant find user with this id', 404));
-  }
-  response.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
-});
-exports.createUser = catchAsync(async (request, response, next) => {
-  const user = await User.create(request.body);
-  response.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
-});
+
 exports.userChangePassword = catchAsync(async (request, response,next)=>{
   const user = await User.findByIdAndUpdate(
     request.params.id,
@@ -49,26 +33,4 @@ exports.userChangePassword = catchAsync(async (request, response,next)=>{
       user
     }
   })
-})
-exports.updateUser = catchAsync(async(request, response, next) => {
-  const user = await User.findByIdAndUpdate(request.params.id,request.body,{new:true});
-  if (!user) {
-    return next(new AppError('cant find user with this id', 404));
-  }
-  response.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
-});
-exports.deleteUser = catchAsync(async(request, response, next) => {
-  const user = await User.findByIdAndDelete(request.params.id);
-  if (!user) {
-    return next(new AppError('cant find user with this id', 404));
-  }
-  response.status(200).json({
-    status: 'success',
-    message:"deleted"
-  });
 });
